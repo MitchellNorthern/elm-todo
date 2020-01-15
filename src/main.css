@@ -6,21 +6,49 @@
     https://github.com/halfzebra/create-elm-app/issues/320
 */
 [data-elm-hot="true"] {
-  height: inherit;
+    height: inherit;
 }
-
+:root {
+    --h1-height: 42px;
+}
+html {
+    height: 100%;
+}
 body {
-  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
-  margin: 0;
-  text-align: center;
-  color: #293c4b;
+    font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    color: #293c4b;
+    height: 100%;
 }
-
-h1 {
-  font-size: 30px;
+.grid-container {
+    display: grid;
+    height: 100%;
+    grid-template-columns: 1fr 5fr 1fr;
+    text-align: center;
 }
-
-img {
-  margin: 20px 0;
-  max-width: 200px;
+.grid-sidebar {
+    display: grid;
+    background-color: #60b5cc;
+    color: #fff;
+    grid-template-rows: 200px auto;
+}
+.grid-body {
+    display: grid;
+    grid-template-rows: 100px auto;
+}
+.body-title {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    font-size: var(--h1-height);
+    line-height: var(--h1-height);
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0ad00;
+}
+.body-content {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
 }
