@@ -4,7 +4,9 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Keyed exposing (..)
+import Html.Keyed as Keyed
+import Html.Lazy as Lazy
+import Json.Decode as Json
 
 
 
@@ -22,12 +24,16 @@ type alias Todo =
 
 
 type alias Model =
-    List Todo
+    { todosList : List Todo
+    , inputField : String
+    }
 
 
 init : Model
 init =
-    []
+    { todosList = []
+    , inputField = ""
+    }
 
 
 
@@ -36,11 +42,52 @@ init =
 
 type Msg
     = NoOp
+    | UpdateInput String
+    | EnterTodo
+    | DeleteTodo
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        UpdateInput inputString ->
+            ( { model | inputField = inputString }, Cmd.none )
+
+        EnterTodo ->
+            ( if String.isEmpty model.inputField then
+                model
+
+              else
+                { model
+                    | todosList = List.append model.todosList (createTodo model)
+                    , inputField = ""
+                }
+            , Cmd.none
+            )
+
+        DeleteTodo ->
+            ( model, Cmd.none )
+
+
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+    let
+        enterKey code =
+            if code == 13 then
+                Json.succeed msg
+
+            else
+                Json.fail "not enter key"
+    in
+    on "keydown" (Json.andThen enterKey keyCode)
+
+
+createTodo : Model -> List Todo
+createTodo model =
+    [ { name = model.inputField, completed = False } ]
 
 
 
@@ -56,13 +103,19 @@ view model =
             , div [ class "body-content" ]
                 [ div [ class "todos-container" ]
                     [ div [ class "todos-heading" ]
-                        [ text ""
+                        [ text "Enter a Todo below"
                         , div [ class "todos-input__wrapper" ]
-                            [ input [ class "todos-input__input", placeholder "Clean the car" ]
+                            [ input
+                                [ type_ "text"
+                                , placeholder "Clean the car"
+                                , value model.inputField
+                                , onInput UpdateInput
+                                , onEnter EnterTodo
+                                ]
                                 []
                             ]
                         ]
-                    , renderAllTodos model
+                    , renderAllTodos model.todosList
                     ]
                 ]
             ]
@@ -70,17 +123,19 @@ view model =
         ]
 
 
-renderTodo : Todo -> Html Msg
-renderTodo todo =
-    div [ class "todo" ]
-        [ text todo.name
-        ]
-
-
 renderAllTodos : List Todo -> Html Msg
 renderAllTodos todos =
-    div [ class "todo-wrapper" ]
-        (List.map renderTodo todos)
+    Keyed.node "div" [ class "todo-wrapper" ] (List.map renderKeyedTodo todos)
+
+
+renderKeyedTodo : Todo -> ( String, Html Msg )
+renderKeyedTodo todo =
+    ( todo.name, Lazy.lazy renderTodo todo )
+
+
+renderTodo : Todo -> Html Msg
+renderTodo todo =
+    div [ class "todo" ] [ text todo.name ]
 
 
 
