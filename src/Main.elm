@@ -14,7 +14,8 @@ import Json.Decode as Json
 
 
 type alias Todo =
-    { name : String
+    { id : Int
+    , name : String
     , completed : Bool
     }
 
@@ -26,6 +27,7 @@ type alias Todo =
 type alias Model =
     { todosList : List Todo
     , inputField : String
+    , currentId : Int
     }
 
 
@@ -33,6 +35,7 @@ init : Model
 init =
     { todosList = []
     , inputField = ""
+    , currentId = 0
     }
 
 
@@ -44,7 +47,7 @@ type Msg
     = NoOp
     | UpdateInput String
     | EnterTodo
-    | DeleteTodo
+    | DeleteTodo Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -62,14 +65,15 @@ update msg model =
 
               else
                 { model
-                    | todosList = List.append model.todosList (createTodo model)
+                    | currentId = model.currentId + 1
+                    , todosList = List.append model.todosList (createTodo model)
                     , inputField = ""
                 }
             , Cmd.none
             )
 
-        DeleteTodo ->
-            ( model, Cmd.none )
+        DeleteTodo todoId ->
+            ( { model | todosList = deleteTodo model todoId }, Cmd.none )
 
 
 onEnter : Msg -> Attribute Msg
@@ -87,7 +91,12 @@ onEnter msg =
 
 createTodo : Model -> List Todo
 createTodo model =
-    [ { name = model.inputField, completed = False } ]
+    [ { id = model.currentId, name = model.inputField, completed = False } ]
+
+
+deleteTodo : Model -> Int -> List Todo
+deleteTodo model todoId =
+    List.filter (\todo -> todo.id /= todoId) model.todosList
 
 
 
@@ -119,7 +128,7 @@ view model =
                     ]
                 ]
             ]
-        , div [ class "grid-sidebar" ] [ text "sidebar" ]
+        , div [ class "grid-sidebar" ] []
         ]
 
 
@@ -135,7 +144,20 @@ renderKeyedTodo todo =
 
 renderTodo : Todo -> Html Msg
 renderTodo todo =
-    div [ class "todo" ] [ text todo.name ]
+    div [ class "todo" ]
+        [ text todo.name
+        , div [ class "todo-icons" ]
+            [ div [ class "todo-icon" ]
+                [ img [ src "edit.svg" ] [] ]
+            , div [ class "todo-icon" ]
+                [ img
+                    [ src "trash-2.svg"
+                    , onClick (DeleteTodo todo.id)
+                    ]
+                    []
+                ]
+            ]
+        ]
 
 
 

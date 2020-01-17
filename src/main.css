@@ -15,9 +15,9 @@ html {
     height: 100%;
 }
 body {
-    font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+    font-family: "Source Sans Pro", "Trebuchet MS", "Lucida Grande",
+        "Bitstream Vera Sans", "Helvetica Neue", sans-serif;
     margin: 0;
-    color: #293c4b;
     height: 100%;
 }
 .grid-container {
@@ -74,7 +74,8 @@ input[type="text"] {
 .todo {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 10px 20px;
     width: 400px;
     height: 60px;
     margin: 10px;
@@ -82,4 +83,12 @@ input[type="text"] {
     background-color: #7fd13b;
     box-shadow: 0 0 10px #293c4b;
     overflow: auto;
+}
+.todo-icons {
+    display: flex;
+    justify-content: space-between;
+    width: 60px;
+}
+.todo-icon {
+    cursor: pointer;
 }
