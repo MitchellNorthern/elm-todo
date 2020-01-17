@@ -20,6 +20,9 @@ body {
     margin: 0;
     height: 100%;
 }
+.hidden {
+    display: none;
+}
 .grid-container {
     display: grid;
     height: 100%;
@@ -91,4 +94,7 @@ input[type="text"] {
 }
 .todo-icon {
     cursor: pointer;
+}
+.todo-container {
+    margin-bottom: 20px;
 }

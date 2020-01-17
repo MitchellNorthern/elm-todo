@@ -17,6 +17,7 @@ type alias Todo =
     { id : Int
     , name : String
     , completed : Bool
+    , displayEdit : Bool
     }
 
 
@@ -28,6 +29,7 @@ type alias Model =
     { todosList : List Todo
     , inputField : String
     , currentId : Int
+    , newTodoName : String
     }
 
 
@@ -36,6 +38,7 @@ init =
     { todosList = []
     , inputField = ""
     , currentId = 0
+    , newTodoName = ""
     }
 
 
@@ -46,8 +49,11 @@ init =
 type Msg
     = NoOp
     | UpdateInput String
+    | UpdateNewName String
     | EnterTodo
     | DeleteTodo Int
+    | EditTodo Int
+    | UpdateTodo Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -58,6 +64,9 @@ update msg model =
 
         UpdateInput inputString ->
             ( { model | inputField = inputString }, Cmd.none )
+
+        UpdateNewName inputString ->
+            ( { model | newTodoName = inputString }, Cmd.none )
 
         EnterTodo ->
             ( if String.isEmpty model.inputField then
@@ -75,6 +84,12 @@ update msg model =
         DeleteTodo todoId ->
             ( { model | todosList = deleteTodo model todoId }, Cmd.none )
 
+        UpdateTodo todoId newName ->
+            ( { model | todosList = updateTodoName model todoId newName, newTodoName = "" }, Cmd.none )
+
+        EditTodo todoId ->
+            ( { model | todosList = showEditTodo model.todosList todoId }, Cmd.none )
+
 
 onEnter : Msg -> Attribute Msg
 onEnter msg =
@@ -91,12 +106,52 @@ onEnter msg =
 
 createTodo : Model -> List Todo
 createTodo model =
-    [ { id = model.currentId, name = model.inputField, completed = False } ]
+    [ { id = model.currentId, name = model.inputField, completed = False, displayEdit = False } ]
 
 
 deleteTodo : Model -> Int -> List Todo
 deleteTodo model todoId =
     List.filter (\todo -> todo.id /= todoId) model.todosList
+
+
+updateTodoName : Model -> Int -> String -> List Todo
+updateTodoName model todoId newName =
+    List.map
+        (\t ->
+            if t.id == todoId then
+                { t
+                    | name = newName
+                    , displayEdit = False
+                }
+
+            else
+                { t
+                    | displayEdit = False
+                }
+        )
+        model.todosList
+
+
+showEditTodo : List Todo -> Int -> List Todo
+showEditTodo todos todoId =
+    List.map
+        (\t ->
+            if t.id == todoId then
+                { t | displayEdit = not t.displayEdit }
+
+            else
+                t
+        )
+        (List.map
+            (\t ->
+                if t.id == todoId then
+                    t
+
+                else
+                    { t | displayEdit = False }
+            )
+            todos
+        )
 
 
 
@@ -124,7 +179,7 @@ view model =
                                 []
                             ]
                         ]
-                    , renderAllTodos model.todosList
+                    , renderAllTodos model model.todosList
                     ]
                 ]
             ]
@@ -132,30 +187,47 @@ view model =
         ]
 
 
-renderAllTodos : List Todo -> Html Msg
-renderAllTodos todos =
-    Keyed.node "div" [ class "todo-wrapper" ] (List.map renderKeyedTodo todos)
+renderAllTodos : Model -> List Todo -> Html Msg
+renderAllTodos model todos =
+    Keyed.node "div" [ class "todo-wrapper" ] (List.map (renderKeyedTodo model) todos)
 
 
-renderKeyedTodo : Todo -> ( String, Html Msg )
-renderKeyedTodo todo =
-    ( todo.name, Lazy.lazy renderTodo todo )
+renderKeyedTodo : Model -> Todo -> ( String, Html Msg )
+renderKeyedTodo model todo =
+    ( todo.name, Lazy.lazy2 renderTodo model todo )
 
 
-renderTodo : Todo -> Html Msg
-renderTodo todo =
-    div [ class "todo" ]
-        [ text todo.name
-        , div [ class "todo-icons" ]
-            [ div [ class "todo-icon" ]
-                [ img [ src "edit.svg" ] [] ]
-            , div [ class "todo-icon" ]
-                [ img
-                    [ src "trash-2.svg"
-                    , onClick (DeleteTodo todo.id)
+renderTodo : Model -> Todo -> Html Msg
+renderTodo model todo =
+    div [ class "todo-container" ]
+        [ div [ class "todo" ]
+            [ text todo.name
+            , div [ class "todo-icons" ]
+                [ div [ class "todo-icon" ]
+                    [ img
+                        [ src "edit.svg"
+                        , onClick (EditTodo todo.id)
+                        ]
+                        []
                     ]
-                    []
+                , div [ class "todo-icon" ]
+                    [ img
+                        [ src "trash-2.svg"
+                        , onClick (DeleteTodo todo.id)
+                        ]
+                        []
+                    ]
                 ]
+            ]
+        , div [ class "todo__update-name", classList [ ( "hidden", not todo.displayEdit ) ] ]
+            [ input
+                [ type_ "text"
+                , placeholder "Enter new Todo name"
+                , value model.newTodoName
+                , onInput UpdateNewName
+                , onEnter (UpdateTodo todo.id model.newTodoName)
+                ]
+                []
             ]
         ]
 
